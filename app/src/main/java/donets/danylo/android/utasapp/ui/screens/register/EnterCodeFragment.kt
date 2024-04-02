@@ -1,4 +1,4 @@
-package donets.danylo.android.utasapp.ui.fragments.register
+package donets.danylo.android.utasapp.ui.screens.register
 
 import android.os.Bundle
 import android.util.Log

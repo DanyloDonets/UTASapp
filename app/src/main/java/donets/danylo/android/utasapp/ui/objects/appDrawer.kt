@@ -1,9 +1,16 @@
 package donets.danylo.android.utasapp.ui.objects
 
+import android.R.attr.label
+import android.R.attr.text
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Context.CLIPBOARD_SERVICE
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.view.View
 import android.widget.ImageView
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.drawerlayout.widget.DrawerLayout
 import com.mikepenz.materialdrawer.AccountHeader
 import com.mikepenz.materialdrawer.AccountHeaderBuilder
@@ -16,18 +23,23 @@ import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem
 import com.mikepenz.materialdrawer.util.AbstractDrawerImageLoader
 import com.mikepenz.materialdrawer.util.DrawerImageLoader
 import donets.danylo.android.utasapp.R
-import donets.danylo.android.utasapp.ui.fragments.ContactsFragment
-import donets.danylo.android.utasapp.ui.fragments.SettingsFragment
-import donets.danylo.android.utasapp.utilits.APP_ACTIVITY
 import donets.danylo.android.utasapp.database.USER
+import donets.danylo.android.utasapp.ui.screens.contacts.ContactsFragment
+import donets.danylo.android.utasapp.ui.screens.groups.AddContactsFragment
+import donets.danylo.android.utasapp.ui.screens.settings.SettingsFragment
+import donets.danylo.android.utasapp.utilits.APP_ACTIVITY
 import donets.danylo.android.utasapp.utilits.downloadAndSetImage
 import donets.danylo.android.utasapp.utilits.replaceFragment
+import donets.danylo.android.utasapp.utilits.showToast
+
+
 
 class appDrawer{
     private lateinit var mDrawer: Drawer
     private lateinit var mHeader: AccountHeader
     private  lateinit var mDrawerLayout: DrawerLayout
     private lateinit var mCurrentProfile: ProfileDrawerItem
+
 
     fun create(){
         initLoader()
@@ -73,46 +85,21 @@ class appDrawer{
                     .withIcon(R.drawable.ic_menu_create_groups),
                 PrimaryDrawerItem().withIdentifier(103)
                     .withIconTintingEnabled(true)
-                    .withName("Створити секретний чат")
-                    .withSelectable(false)
-                    .withIcon(R.drawable.ic_menu_secret_chat),
-                PrimaryDrawerItem().withIdentifier(104)
-                    .withIconTintingEnabled(true)
-                    .withName("Створити канал")
-                    .withSelectable(false)
-                    .withIcon(R.drawable.ic_menu_create_channel),
-                PrimaryDrawerItem().withIdentifier(105)
-                    .withIconTintingEnabled(true)
-                    .withName("Створити групу")
-                    .withSelectable(false)
-                    .withIcon(R.drawable.ic_menu_create_groups),
-                PrimaryDrawerItem().withIdentifier(106)
-                    .withIconTintingEnabled(true)
                     .withName("Контакти")
                     .withSelectable(false)
                     .withIcon(R.drawable.ic_menu_contacts),
-                PrimaryDrawerItem().withIdentifier(107)
-                    .withIconTintingEnabled(true)
-                    .withName("Виклики")
-                    .withSelectable(false)
-                    .withIcon(R.drawable.ic_menu_phone),
-                PrimaryDrawerItem().withIdentifier(108)
-                    .withIconTintingEnabled(true)
-                    .withName("Особливі")
-                    .withSelectable(false)
-                    .withIcon(R.drawable.ic_menu_favorites),
-                PrimaryDrawerItem().withIdentifier(109)
+                PrimaryDrawerItem().withIdentifier(104)
                     .withIconTintingEnabled(true)
                     .withName("Налаштування")
                     .withSelectable(false)
                     .withIcon(R.drawable.ic_menu_settings),
                 DividerDrawerItem(),
-                PrimaryDrawerItem().withIdentifier(110)
+                PrimaryDrawerItem().withIdentifier(105)
                     .withIconTintingEnabled(true)
                     .withName("Запросити друзів")
                     .withSelectable(false)
                     .withIcon(R.drawable.ic_menu_create_groups),
-                PrimaryDrawerItem().withIdentifier(111)
+                PrimaryDrawerItem().withIdentifier(106)
                     .withIconTintingEnabled(true)
                     .withName("Тех. підтримка")
                     .withSelectable(false)
@@ -133,9 +120,19 @@ class appDrawer{
 
     private fun clickToItem(position:Int){
         when (position) {
-            9 -> replaceFragment(SettingsFragment())
-            6 -> replaceFragment(ContactsFragment())
+            2 -> replaceFragment(AddContactsFragment())
+            4 -> replaceFragment(SettingsFragment())
+            3 -> replaceFragment(ContactsFragment())
+            5 -> addToCopyBuffer()
         }
+    }
+
+    private fun addToCopyBuffer() {
+        var  clipboardManager = getSystemService(APP_ACTIVITY, ClipboardManager::class.java) as ClipboardManager
+
+        val clipData = ClipData.newPlainText("text", "Посилання для друзів")
+        clipboardManager.setPrimaryClip(clipData)
+        showToast("Скопійовано")
     }
 
     private fun createHeader() {

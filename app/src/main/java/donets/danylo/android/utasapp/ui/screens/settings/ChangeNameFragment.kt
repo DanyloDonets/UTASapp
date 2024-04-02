@@ -1,4 +1,4 @@
-package donets.danylo.android.utasapp.ui.fragments
+package donets.danylo.android.utasapp.ui.screens.settings
 
 
 import android.os.Bundle
@@ -8,6 +8,7 @@ import donets.danylo.android.utasapp.R
 import donets.danylo.android.utasapp.databinding.FragmentChangeNameBinding
 import donets.danylo.android.utasapp.database.USER
 import donets.danylo.android.utasapp.database.setNameToDatabase
+import donets.danylo.android.utasapp.ui.screens.base.BaseChangeFragment
 import donets.danylo.android.utasapp.utilits.showToast
 
 @Suppress("DEPRECATION")

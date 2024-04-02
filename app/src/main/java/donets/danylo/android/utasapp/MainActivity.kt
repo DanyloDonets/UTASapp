@@ -13,8 +13,7 @@ import androidx.core.content.ContextCompat
 
 import donets.danylo.android.utasapp.databinding.ActivityMainBinding
 
-import donets.danylo.android.utasapp.ui.fragments.MainFragment
-import donets.danylo.android.utasapp.ui.fragments.register.EnterPhoneNumberFragment
+import donets.danylo.android.utasapp.ui.screens.register.EnterPhoneNumberFragment
 import donets.danylo.android.utasapp.ui.objects.appDrawer
 import donets.danylo.android.utasapp.utilits.APP_ACTIVITY
 import donets.danylo.android.utasapp.database.AUTH
@@ -26,6 +25,7 @@ import donets.danylo.android.utasapp.utilits.appStatus
 import donets.danylo.android.utasapp.utilits.initContacts
 import donets.danylo.android.utasapp.database.initFirebase
 import donets.danylo.android.utasapp.database.initUser
+import donets.danylo.android.utasapp.ui.screens.mainList.MainListFragment
 import donets.danylo.android.utasapp.utilits.replaceFragment
 
 import kotlinx.coroutines.CoroutineScope
@@ -73,7 +73,7 @@ class MainActivity : AppCompatActivity() {
 
 
             mAppDrawer.create()
-            replaceFragment(MainFragment(), false)
+            replaceFragment(MainListFragment(), false)
         } else {
             replaceFragment(EnterPhoneNumberFragment(), false)
         }

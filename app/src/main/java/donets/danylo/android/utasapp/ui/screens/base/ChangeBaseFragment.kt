@@ -1,18 +1,13 @@
-package donets.danylo.android.utasapp.ui.fragments
+package donets.danylo.android.utasapp.ui.screens.base
 
-import android.os.Bundle
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
 import donets.danylo.android.utasapp.R
 
 
 import donets.danylo.android.utasapp.MainActivity
-import donets.danylo.android.utasapp.utilits.APP_ACTIVITY
 import donets.danylo.android.utasapp.utilits.hideKeyboard
 
 

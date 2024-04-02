@@ -1,15 +1,17 @@
-package donets.danylo.android.utasapp.ui.fragments.singleChat
+package donets.danylo.android.utasapp.ui.screens.singleChat
 
-import android.Manifest.permission.RECORD_AUDIO
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.View
 import android.widget.AbsListView
+import android.widget.ImageView
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
@@ -17,47 +19,50 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.github.dhaval2404.imagepicker.ImagePicker
-import com.google.firebase.database.ChildEventListener
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.firebase.database.DatabaseReference
 import de.hdodenhof.circleimageview.CircleImageView
 import donets.danylo.android.utasapp.R
 import donets.danylo.android.utasapp.databinding.FragmentSingleChatBinding
 import donets.danylo.android.utasapp.models.CommonModel
 import donets.danylo.android.utasapp.models.UserModel
-import donets.danylo.android.utasapp.ui.fragments.BaseFragment
+import donets.danylo.android.utasapp.ui.screens.base.BaseFragment
 import donets.danylo.android.utasapp.utilits.APP_ACTIVITY
 import donets.danylo.android.utasapp.utilits.AppValueEventListener
 import donets.danylo.android.utasapp.database.CURRENT_UID
 
-import donets.danylo.android.utasapp.database.FOLDER_PROFILE_IMAGE
 import donets.danylo.android.utasapp.database.NODE_MESSAGES
 import donets.danylo.android.utasapp.database.NODE_USERS
 import donets.danylo.android.utasapp.database.REF_DATABASE_ROOT
-import donets.danylo.android.utasapp.database.REF_STORAGE_ROOT
 import donets.danylo.android.utasapp.database.TYPE_TEXT
-import donets.danylo.android.utasapp.database.USER
+import donets.danylo.android.utasapp.database.clearChat
+import donets.danylo.android.utasapp.database.deleteChat
 import donets.danylo.android.utasapp.utilits.downloadAndSetImage
 import donets.danylo.android.utasapp.database.getCommonModel
 import donets.danylo.android.utasapp.database.getMessageKey
-import donets.danylo.android.utasapp.database.getUrlFromStorage
 import donets.danylo.android.utasapp.database.getUserModel
-import donets.danylo.android.utasapp.database.putFileToStorage
+import donets.danylo.android.utasapp.database.saveToMainList
 
-import donets.danylo.android.utasapp.database.putUrlToDatabase
 import donets.danylo.android.utasapp.database.sendMessage
 
 import donets.danylo.android.utasapp.database.uploadFileToStorage
+import donets.danylo.android.utasapp.ui.messageRecyclerView.views.AppViewFactory
+import donets.danylo.android.utasapp.ui.screens.mainList.MainListFragment
 import donets.danylo.android.utasapp.utilits.AppChildEventListener
 import donets.danylo.android.utasapp.utilits.AppTextWatcher
 import donets.danylo.android.utasapp.utilits.AppVoiceRecorder
+import donets.danylo.android.utasapp.utilits.PICK_FILE_REQUEST_CODE
+import donets.danylo.android.utasapp.utilits.TYPE_CHAT
+import donets.danylo.android.utasapp.utilits.TYPE_MESSAGE_FILE
 import donets.danylo.android.utasapp.utilits.checkPermission
 import donets.danylo.android.utasapp.utilits.showToast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import donets.danylo.android.utasapp.utilits.RECORD_AUDIO
 import donets.danylo.android.utasapp.utilits.TYPE_MESSAGE_IMAGE
 import donets.danylo.android.utasapp.utilits.TYPE_MESSAGE_VOICE
+import donets.danylo.android.utasapp.utilits.getFilenameFromUri
+import donets.danylo.android.utasapp.utilits.replaceFragment
 
 @Suppress("DEPRECATION")
 class SingleChatFragment(contact: CommonModel) : BaseFragment(R.layout.fragment_single_chat) {
@@ -81,6 +86,7 @@ class SingleChatFragment(contact: CommonModel) : BaseFragment(R.layout.fragment_
     private lateinit var mSwipeRefreshLayout: SwipeRefreshLayout
     private lateinit var mLayoutManager: LinearLayoutManager
     private lateinit var mAppVoiceRecorder: AppVoiceRecorder
+    private lateinit var mBottomSheetBehavior: BottomSheetBehavior<*>
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -100,11 +106,11 @@ class SingleChatFragment(contact: CommonModel) : BaseFragment(R.layout.fragment_
             val message = it.getCommonModel()
 
             if (mSmoothScrollToPosition) {
-                mAdapter.addItemToBottom(message) {
+                mAdapter.addItemToBottom(AppViewFactory.getView(message)) {
                     mRecyclerView.smoothScrollToPosition(mAdapter.itemCount)
                 }
             } else {
-                mAdapter.addItemToTop(message) {
+                mAdapter.addItemToTop(AppViewFactory.getView(message)) {
                     mSwipeRefreshLayout.isRefreshing = false
                 }
             }
@@ -158,6 +164,7 @@ class SingleChatFragment(contact: CommonModel) : BaseFragment(R.layout.fragment_
                 showToast("Введіть повідомлення")
             }else{
                 sendMessage(message, contact_.id, TYPE_TEXT){
+                    saveToMainList(contact_.id, TYPE_CHAT)
                     binding.chatInputMessage.setText("")
                 }
             }
@@ -184,6 +191,9 @@ class SingleChatFragment(contact: CommonModel) : BaseFragment(R.layout.fragment_
 
     @SuppressLint("ClickableViewAccessibility")
     private fun initFields() {
+        setHasOptionsMenu(true)
+        mBottomSheetBehavior= BottomSheetBehavior.from(binding.root.findViewById(R.id.bottom_sheet_choice))
+        mBottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
         mSwipeRefreshLayout = binding.chatSwipeRefresh
         mLayoutManager = LinearLayoutManager(this.context)
         mAppVoiceRecorder = AppVoiceRecorder()
@@ -200,13 +210,13 @@ class SingleChatFragment(contact: CommonModel) : BaseFragment(R.layout.fragment_
             }
         })
 
-        binding.chatBtnAttach.setOnClickListener { attachFile() }
+        binding.chatBtnAttach.setOnClickListener { attach() }
 
         CoroutineScope(Dispatchers.IO).launch {
             binding.chatBtnVoice.setOnTouchListener { v, event ->
                 if (checkPermission(donets.danylo.android.utasapp.utilits.RECORD_AUDIO)){
                     if (event.action == MotionEvent.ACTION_DOWN){
-                        //TODO record
+
                         binding.chatInputMessage.setText("Запис")
                        binding.chatBtnVoice.setColorFilter(
                             ContextCompat.getColor(
@@ -217,7 +227,7 @@ class SingleChatFragment(contact: CommonModel) : BaseFragment(R.layout.fragment_
                         val messageKey = getMessageKey(contact_.id)
                         mAppVoiceRecorder.startRecord(messageKey)
                     } else if (event.action == MotionEvent.ACTION_UP) {
-                        //TODO stop record
+
                         binding.chatInputMessage.setText("")
                         binding.chatBtnVoice.colorFilter = null
                         mAppVoiceRecorder.stopRecord { file, messageKey ->
@@ -235,20 +245,43 @@ class SingleChatFragment(contact: CommonModel) : BaseFragment(R.layout.fragment_
     @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode == AppCompatActivity.RESULT_OK) {
-            val imageUri = data?.data
-            val messageKey = getMessageKey(contact_.id)
 
-            if (imageUri != null) {
-                uploadFileToStorage(imageUri, messageKey, contact_.id, TYPE_MESSAGE_IMAGE)
+        if (data!=null) {
+            when(requestCode) {
+                 ImagePicker.REQUEST_CODE->{
+                    val imageUri = data?.data
+                    val messageKey = getMessageKey(contact_.id)
+
+                if (imageUri != null) {
+                    uploadFileToStorage(imageUri, messageKey, contact_.id, TYPE_MESSAGE_IMAGE)
+                }
+                        mSmoothScrollToPosition = true
             }
-            mSmoothScrollToPosition = true
-
+                PICK_FILE_REQUEST_CODE -> {
+                    val uri = data.data
+                    val messageKey = getMessageKey(contact_.id)
+                    val filename = getFilenameFromUri(uri!!)
+                    uploadFileToStorage(uri,messageKey,contact_.id, TYPE_MESSAGE_FILE,filename)
+                    mSmoothScrollToPosition = true
+                }
+            }
         }
     }
 
+    private fun attach() {
+        mBottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+        binding.root.findViewById<ImageView>(R.id.btn_attach_file).setOnClickListener { attachFile() }
+        binding.root.findViewById<ImageView>(R.id.btn_attach_image).setOnClickListener { attachImage() }
+    }
 
-    private fun attachFile() {
+    private fun attachFile(){
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.type = "*/*"
+        startActivityForResult(intent, PICK_FILE_REQUEST_CODE)
+    }
+
+
+    private fun attachImage() {
         ImagePicker.with(this)
             .crop() //Crop image(Optional), Check Customization for more option
             .compress(1024)			//Final image size will be less than 1 MB(Optional)
@@ -265,5 +298,27 @@ class SingleChatFragment(contact: CommonModel) : BaseFragment(R.layout.fragment_
         super.onDestroyView()
         _binding = null
         mAppVoiceRecorder.releaseRecorder()
+        mAdapter.onDestroy()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        /* Создания выпадающего меню*/
+        activity?.menuInflater?.inflate(R.menu.single_chat_action_menu, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        /* Слушатель выбора пунктов выпадающего меню */
+        when (item.itemId) {
+
+            R.id.menu_clear_chat -> clearChat(contact_.id){
+                showToast("Чат очищено")
+                replaceFragment(MainListFragment())
+            }
+            R.id.menu_delete_chat -> deleteChat(contact_.id){
+                showToast("Чат видалено")
+                replaceFragment(MainListFragment())
+            }
+        }
+        return true
     }
 }

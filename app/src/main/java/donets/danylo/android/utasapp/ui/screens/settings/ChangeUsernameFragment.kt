@@ -1,4 +1,4 @@
-package donets.danylo.android.utasapp.ui.fragments
+package donets.danylo.android.utasapp.ui.screens.settings
 
 import android.os.Bundle
 import android.view.*
@@ -10,6 +10,7 @@ import donets.danylo.android.utasapp.database.NODE_USERS
 import donets.danylo.android.utasapp.database.REF_DATABASE_ROOT
 import donets.danylo.android.utasapp.database.USER
 import donets.danylo.android.utasapp.databinding.FragmentChangeUsernameBinding
+import donets.danylo.android.utasapp.ui.screens.base.BaseChangeFragment
 import donets.danylo.android.utasapp.utilits.*
 import java.util.*
 

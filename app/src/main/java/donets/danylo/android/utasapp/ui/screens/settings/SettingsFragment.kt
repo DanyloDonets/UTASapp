@@ -1,4 +1,4 @@
-package donets.danylo.android.utasapp.ui.fragments
+package donets.danylo.android.utasapp.ui.screens.settings
 
 import android.content.Intent
 import android.net.Uri

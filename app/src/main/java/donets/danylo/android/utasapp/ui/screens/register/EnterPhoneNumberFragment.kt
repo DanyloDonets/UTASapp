@@ -1,6 +1,6 @@
 @file:Suppress("DEPRECATION")
 
-package donets.danylo.android.utasapp.ui.fragments.register
+package donets.danylo.android.utasapp.ui.screens.register
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -8,11 +8,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.google.firebase.FirebaseException
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
-import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
-import donets.danylo.android.utasapp.MainActivity
 import donets.danylo.android.utasapp.R
 
 import donets.danylo.android.utasapp.databinding.FragmentEnterPhoneNumberBinding

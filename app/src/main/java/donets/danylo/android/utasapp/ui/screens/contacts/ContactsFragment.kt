@@ -1,4 +1,4 @@
-package donets.danylo.android.utasapp.ui.fragments
+package donets.danylo.android.utasapp.ui.screens.contacts
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -21,7 +21,8 @@ import com.firebase.ui.database.FirebaseRecyclerOptions
 import donets.danylo.android.utasapp.databinding.ContactItemBinding
 import donets.danylo.android.utasapp.databinding.FragmentContactsBinding
 import donets.danylo.android.utasapp.models.CommonModel
-import donets.danylo.android.utasapp.ui.fragments.singleChat.SingleChatFragment
+import donets.danylo.android.utasapp.ui.screens.base.BaseFragment
+import donets.danylo.android.utasapp.ui.screens.singleChat.SingleChatFragment
 import donets.danylo.android.utasapp.utilits.downloadAndSetImage
 import donets.danylo.android.utasapp.utilits.replaceFragment
 
