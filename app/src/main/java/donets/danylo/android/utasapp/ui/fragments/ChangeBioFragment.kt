@@ -2,8 +2,13 @@ package donets.danylo.android.utasapp.ui.fragments
 
 import android.os.Bundle
 import android.view.*
-import androidx.fragment.app.Fragment
 import donets.danylo.android.utasapp.R
+import donets.danylo.android.utasapp.database.CHILD_BIO
+import donets.danylo.android.utasapp.database.CURRENT_UID
+import donets.danylo.android.utasapp.database.NODE_USERS
+import donets.danylo.android.utasapp.database.REF_DATABASE_ROOT
+import donets.danylo.android.utasapp.database.USER
+import donets.danylo.android.utasapp.database.setBioToDatabase
 import donets.danylo.android.utasapp.databinding.FragmentChangeBioBinding
 import donets.danylo.android.utasapp.utilits.*
 
@@ -26,15 +31,7 @@ class ChangeBioFragment : BaseChangeFragment(R.layout.fragment_change_bio) {
     override fun change() {
         super.change()
         val newBio = binding.settingsInputBio.text.toString()
-        REF_DATABASE_ROOT.child(NODE_USERS).child(CURRENT_UID).child(CHILD_BIO).setValue(newBio)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    showToast(getString(R.string.toast_data_update))
-                    USER.bio = newBio
-                    fragmentManager?.popBackStack()
-                }
-
-            }
+        setBioToDatabase(newBio)
     }
 
     override fun onDestroyView() {

@@ -4,16 +4,10 @@ package donets.danylo.android.utasapp.ui.fragments
 import android.os.Bundle
 import android.util.Log
 import android.view.*
-import androidx.fragment.app.Fragment
-import donets.danylo.android.utasapp.MainActivity
 import donets.danylo.android.utasapp.R
 import donets.danylo.android.utasapp.databinding.FragmentChangeNameBinding
-import donets.danylo.android.utasapp.utilits.APP_ACTIVITY
-import donets.danylo.android.utasapp.utilits.CHILD_FULLNAME
-import donets.danylo.android.utasapp.utilits.CURRENT_UID
-import donets.danylo.android.utasapp.utilits.NODE_USERS
-import donets.danylo.android.utasapp.utilits.REF_DATABASE_ROOT
-import donets.danylo.android.utasapp.utilits.USER
+import donets.danylo.android.utasapp.database.USER
+import donets.danylo.android.utasapp.database.setNameToDatabase
 import donets.danylo.android.utasapp.utilits.showToast
 
 @Suppress("DEPRECATION")
@@ -63,22 +57,12 @@ class ChangeNameFragment : BaseChangeFragment(R.layout.fragment_change_name) {
             showToast(getString(R.string.settings_toast_name_is_empty))
         } else {
             val fullName = "$name $surname"
-            REF_DATABASE_ROOT.child(NODE_USERS).child(CURRENT_UID).child(CHILD_FULLNAME)
-                .setValue(fullName)
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        showToast(getString(R.string.toast_data_update))
-                        USER.fullname = fullName
-                        APP_ACTIVITY.mAppDrawer.updateHeader()
-                        fragmentManager?.popBackStack()
-                    }
-                    else{
-                        showToast(task.exception?.message.toString())
-                        Log.e("Loging", task.exception?.message.toString())
-                    }
-                }
+
+            setNameToDatabase(fullName)
         }
     }
+
+
 
     override fun onDestroyView() {
         super.onDestroyView()

@@ -2,8 +2,13 @@ package donets.danylo.android.utasapp.ui.fragments
 
 import android.os.Bundle
 import android.view.*
-import androidx.fragment.app.Fragment
 import donets.danylo.android.utasapp.R
+import donets.danylo.android.utasapp.database.CHILD_USERNAME
+import donets.danylo.android.utasapp.database.CURRENT_UID
+import donets.danylo.android.utasapp.database.NODE_USERNAMES
+import donets.danylo.android.utasapp.database.NODE_USERS
+import donets.danylo.android.utasapp.database.REF_DATABASE_ROOT
+import donets.danylo.android.utasapp.database.USER
 import donets.danylo.android.utasapp.databinding.FragmentChangeUsernameBinding
 import donets.danylo.android.utasapp.utilits.*
 import java.util.*

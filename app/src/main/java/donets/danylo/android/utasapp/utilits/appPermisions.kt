@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat
 const val READ_CONTACTS = Manifest.permission.READ_CONTACTS
 const val CAMERA = Manifest.permission.CAMERA
 const val PERMISSION_REQUEST = 200
+const val RECORD_AUDIO = Manifest.permission.RECORD_AUDIO
 
 fun checkPermission(permission: String): Boolean {
 

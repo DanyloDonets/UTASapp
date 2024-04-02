@@ -7,27 +7,22 @@ import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.github.dhaval2404.imagepicker.ImagePicker
-import com.google.firebase.storage.StorageReference
-import com.squareup.picasso.Picasso
-import com.yalantis.ucrop.UCrop
 import donets.danylo.android.utasapp.R
-import donets.danylo.android.utasapp.activities.RegisterActivity
 import donets.danylo.android.utasapp.databinding.FragmentSettingsBinding
 import donets.danylo.android.utasapp.utilits.APP_ACTIVITY
-import donets.danylo.android.utasapp.utilits.AUTH
-import donets.danylo.android.utasapp.utilits.CHILD_PHOTO_URL
-import donets.danylo.android.utasapp.utilits.CURRENT_UID
-import donets.danylo.android.utasapp.utilits.FOLDER_PROFILE_IMAGE
-import donets.danylo.android.utasapp.utilits.NODE_USERS
-import donets.danylo.android.utasapp.utilits.REF_DATABASE_ROOT
-import donets.danylo.android.utasapp.utilits.REF_STORAGE_ROOT
-import donets.danylo.android.utasapp.utilits.USER
+import donets.danylo.android.utasapp.database.AUTH
+import donets.danylo.android.utasapp.database.CURRENT_UID
+import donets.danylo.android.utasapp.database.FOLDER_PROFILE_IMAGE
+import donets.danylo.android.utasapp.database.REF_STORAGE_ROOT
+import donets.danylo.android.utasapp.database.USER
+import donets.danylo.android.utasapp.utilits.appStatus
 import donets.danylo.android.utasapp.utilits.downloadAndSetImage
-import donets.danylo.android.utasapp.utilits.getUrlFromStorage
-import donets.danylo.android.utasapp.utilits.putImageToStorage
-import donets.danylo.android.utasapp.utilits.putUrlToDatabase
-import donets.danylo.android.utasapp.utilits.replaceActivity
+import donets.danylo.android.utasapp.database.getUrlFromStorage
+import donets.danylo.android.utasapp.database.putFileToStorage
+
+import donets.danylo.android.utasapp.database.putUrlToDatabase
 import donets.danylo.android.utasapp.utilits.replaceFragment
+import donets.danylo.android.utasapp.utilits.restartActivity
 import donets.danylo.android.utasapp.utilits.showToast
 
 
@@ -67,7 +62,7 @@ class SettingsFragment : Fragment() {
         ImagePicker.with(this)
             .crop() //Crop image(Optional), Check Customization for more option
             .compress(1024)			//Final image size will be less than 1 MB(Optional)
-            .maxResultSize(600, 600)	//Final image resolution will be less than 1080 x 1080(Optional)
+            .maxResultSize(250, 250)	//Final image resolution will be less than 1080 x 1080(Optional)
             .start()
     }
 
@@ -79,7 +74,7 @@ class SettingsFragment : Fragment() {
             val path = REF_STORAGE_ROOT.child(FOLDER_PROFILE_IMAGE)
                 .child(CURRENT_UID)
             if (resultUri != null) {
-                putImageToStorage(resultUri, path){
+                putFileToStorage(resultUri, path){
                     getUrlFromStorage(path){
                         putUrlToDatabase(it){
                             binding.settingsUserPhoto.downloadAndSetImage(it)
@@ -103,8 +98,9 @@ class SettingsFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId){
             R.id.settings_menu_exit -> {
+                appStatus.updateStatus(appStatus.OFFLINE)
                 AUTH.signOut()
-                APP_ACTIVITY.replaceActivity(RegisterActivity())
+                restartActivity()
             }
             R.id.settings_menu_change_name -> replaceFragment(ChangeNameFragment())
         }

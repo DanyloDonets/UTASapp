@@ -11,23 +11,21 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 
 
-
-import donets.danylo.android.utasapp.activities.RegisterActivity
 import donets.danylo.android.utasapp.databinding.ActivityMainBinding
 
-import donets.danylo.android.utasapp.ui.fragments.ChatsFragment
-import donets.danylo.android.utasapp.ui.objects.appDriver
+import donets.danylo.android.utasapp.ui.fragments.MainFragment
+import donets.danylo.android.utasapp.ui.fragments.register.EnterPhoneNumberFragment
+import donets.danylo.android.utasapp.ui.objects.appDrawer
 import donets.danylo.android.utasapp.utilits.APP_ACTIVITY
-import donets.danylo.android.utasapp.utilits.AUTH
+import donets.danylo.android.utasapp.database.AUTH
 
 import donets.danylo.android.utasapp.utilits.READ_CONTACTS
 
 import donets.danylo.android.utasapp.utilits.appStatus
 
 import donets.danylo.android.utasapp.utilits.initContacts
-import donets.danylo.android.utasapp.utilits.initFirebase
-import donets.danylo.android.utasapp.utilits.initUser
-import donets.danylo.android.utasapp.utilits.replaceActivity
+import donets.danylo.android.utasapp.database.initFirebase
+import donets.danylo.android.utasapp.database.initUser
 import donets.danylo.android.utasapp.utilits.replaceFragment
 
 import kotlinx.coroutines.CoroutineScope
@@ -38,15 +36,8 @@ import kotlinx.coroutines.launch
 class MainActivity : AppCompatActivity() {
 
     private lateinit var mBinding: ActivityMainBinding
-    private lateinit var mToolbar:Toolbar
-    lateinit var mAppDrawer: appDriver
-
-
-
-
-
-
-
+    lateinit var mToolbar:Toolbar
+    lateinit var mAppDrawer: appDrawer
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,8 +55,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
-
     override fun onStart() {
         super.onStart()
         appStatus.updateStatus(appStatus.ONLINE)
@@ -79,13 +68,14 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun initFunc() {
+        setSupportActionBar(mToolbar)
         if (AUTH.currentUser!=null){
 
-            setSupportActionBar(mToolbar)
+
             mAppDrawer.create()
-            replaceFragment(ChatsFragment(), false)
+            replaceFragment(MainFragment(), false)
         } else {
-            replaceActivity(RegisterActivity())
+            replaceFragment(EnterPhoneNumberFragment(), false)
         }
     }
 
@@ -93,8 +83,8 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun initFields() {
-        mToolbar = mBinding.mainToolBar
-        mAppDrawer = appDriver(this, mToolbar)
+        mToolbar = mBinding.mainToolbar
+        mAppDrawer = appDrawer()
 
     }
 

@@ -1,6 +1,6 @@
 @file:Suppress("DEPRECATION")
 
-package donets.danylo.android.utasapp.ui.fragments
+package donets.danylo.android.utasapp.ui.fragments.register
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -14,11 +14,13 @@ import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
 import donets.danylo.android.utasapp.MainActivity
 import donets.danylo.android.utasapp.R
-import donets.danylo.android.utasapp.activities.RegisterActivity
+
 import donets.danylo.android.utasapp.databinding.FragmentEnterPhoneNumberBinding
-import donets.danylo.android.utasapp.utilits.AUTH
-import donets.danylo.android.utasapp.utilits.replaceActivity
+import donets.danylo.android.utasapp.database.AUTH
+import donets.danylo.android.utasapp.utilits.APP_ACTIVITY
+
 import donets.danylo.android.utasapp.utilits.replaceFragment
+import donets.danylo.android.utasapp.utilits.restartActivity
 import donets.danylo.android.utasapp.utilits.showToast
 import java.util.concurrent.TimeUnit
 
@@ -42,10 +44,10 @@ class EnterPhoneNumberFragment : Fragment() {
 
         mCallBack = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks(){
             override fun onVerificationCompleted(credential: PhoneAuthCredential) {
-                AUTH.signInWithCredential(credential).addOnCompleteListener {task ->
+                AUTH.signInWithCredential(credential).addOnCompleteListener { task ->
                     if(task.isSuccessful){
                         showToast("Welcome")
-                        (activity as RegisterActivity).replaceActivity(MainActivity())
+                        restartActivity()
                     }else{
                         showToast(task.exception?.message.toString())
                     }
@@ -77,15 +79,13 @@ class EnterPhoneNumberFragment : Fragment() {
 
     private fun authUser() {
         mPhoneNumber = binding.registerInputPhoneNumber.text.toString()
-        PhoneAuthProvider.verifyPhoneNumber(
-            PhoneAuthOptions
-                .newBuilder(FirebaseAuth.getInstance())
-                .setActivity(activity as RegisterActivity)
-                .setPhoneNumber(mPhoneNumber)
-                .setTimeout(10L, TimeUnit.SECONDS)
-                .setCallbacks(mCallBack)
-                .build()
-        )    }
+        PhoneAuthProvider.getInstance().verifyPhoneNumber(
+            mPhoneNumber,
+            60,
+            TimeUnit.SECONDS,
+            APP_ACTIVITY,
+            mCallBack
+        )  }
 
     override fun onDestroyView() {
         super.onDestroyView()
