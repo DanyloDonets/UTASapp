@@ -6,4 +6,6 @@ interface MessageHolder {
     fun drawMessage(view: MessageView)
     fun onAttach(view: MessageView)
     fun onDettach()
+
+
 }

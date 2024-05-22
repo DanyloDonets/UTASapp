@@ -1,5 +1,6 @@
 package donets.danylo.android.utasapp.ui.screens.mainList
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,10 +9,14 @@ import androidx.recyclerview.widget.RecyclerView
 import de.hdodenhof.circleimageview.CircleImageView
 import donets.danylo.android.utasapp.R
 import donets.danylo.android.utasapp.models.CommonModel
+import donets.danylo.android.utasapp.ui.screens.groups.GroupChatFragment
 import donets.danylo.android.utasapp.ui.screens.singleChat.SingleChatFragment
+import donets.danylo.android.utasapp.utilits.TYPE_CHAT
+import donets.danylo.android.utasapp.utilits.TYPE_GROUP
 import donets.danylo.android.utasapp.utilits.downloadAndSetImage
 import donets.danylo.android.utasapp.utilits.replaceFragment
 
+@Suppress("DEPRECATION")
 class MainListAdapter : RecyclerView.Adapter<MainListAdapter.MainListHolder>() {
 
     private var listItems = mutableListOf<CommonModel>()
@@ -27,7 +32,11 @@ class MainListAdapter : RecyclerView.Adapter<MainListAdapter.MainListHolder>() {
             LayoutInflater.from(parent.context).inflate(R.layout.main_list_item, parent, false)
         val holder = MainListHolder(view)
         holder.itemView.setOnClickListener {
-            replaceFragment(SingleChatFragment(listItems[holder.adapterPosition]))
+            Log.i("loging","type adapter = "+listItems[holder.adapterPosition].toString())
+            when(listItems[holder.adapterPosition].type){
+                    TYPE_CHAT ->replaceFragment(SingleChatFragment(listItems[holder.adapterPosition]))
+                TYPE_GROUP -> replaceFragment(GroupChatFragment(listItems[holder.adapterPosition]))
+            }
         }
         return holder
     }

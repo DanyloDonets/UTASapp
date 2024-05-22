@@ -1,4 +1,4 @@
-package donets.danylo.android.utasapp.ui.screens.singleChat
+package donets.danylo.android.utasapp.ui.screens.groups
 
 import android.app.AlertDialog
 import android.util.Log
@@ -9,7 +9,9 @@ import androidx.recyclerview.widget.RecyclerView
 import donets.danylo.android.utasapp.R
 import donets.danylo.android.utasapp.database.CURRENT_UID
 import donets.danylo.android.utasapp.database.deleteMessage
+import donets.danylo.android.utasapp.database.deleteMessageFromGroup
 import donets.danylo.android.utasapp.database.editMessage
+import donets.danylo.android.utasapp.database.editMessageFromGroup
 import donets.danylo.android.utasapp.models.CommonModel
 import donets.danylo.android.utasapp.ui.messageRecyclerView.viewHolder.AppHolderFactory
 import donets.danylo.android.utasapp.ui.messageRecyclerView.viewHolder.MessageHolder
@@ -17,18 +19,13 @@ import donets.danylo.android.utasapp.ui.messageRecyclerView.views.MessageView
 import donets.danylo.android.utasapp.utilits.APP_ACTIVITY
 import donets.danylo.android.utasapp.utilits.showToast
 
+
 @Suppress("DEPRECATION")
-class SingleChatAdapter(var contact: CommonModel) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class GroupChatAdapter(private val group: CommonModel) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var mListMessagesCache = mutableListOf<MessageView>()
     private var mListHolders = mutableListOf<MessageHolder>()
 
-
-
-
-    override fun getItemViewType(position: Int): Int {
-        return mListMessagesCache[position].getTypeView()
-    }
 
     private fun showEditTextDialog(messageText:String,id:String, position: Int){
 
@@ -41,8 +38,8 @@ class SingleChatAdapter(var contact: CommonModel) : RecyclerView.Adapter<Recycle
         with(builder){
             setTitle("Змінити повідомлення")
             setPositiveButton("Ok"){dialog, witch ->
-                editMessage( editText.text.toString(),id, contact.id)
-            mListMessagesCache[position].text = editText.text.toString()}
+                editMessageFromGroup( editText.text.toString(),id,group.id)
+                mListMessagesCache[position].text = editText.text.toString()}
             setView(dialogLayout)
             show()
         }
@@ -55,48 +52,49 @@ class SingleChatAdapter(var contact: CommonModel) : RecyclerView.Adapter<Recycle
 
         holder.itemView.setOnClickListener {
             if(CURRENT_UID == mListMessagesCache[holder.adapterPosition].from){
-            AlertDialog.Builder(APP_ACTIVITY, R.style.AlertDialogTheme)
-                .setTitle("Обріть дію")
-                .setMessage("Оберіть дію")
+                AlertDialog.Builder(APP_ACTIVITY, R.style.AlertDialogTheme)
+                    .setTitle("Обріть дію")
+                    .setMessage("Оберіть дію")
 
-                .setPositiveButton("Видалити повідомлення")
-                { _,_ ->
-                    deleteMessage(mListMessagesCache[holder.adapterPosition].id, contact.id)
-                    showToast("Повідомлення видалене")
-                    Log.i("loging", "delete")
-                    mListMessagesCache.removeAt(holder.adapterPosition)
-                    notifyItemRemoved(holder.adapterPosition)
+                    .setPositiveButton("Видалити повідомлення")
+                    { _,_ ->
+                        deleteMessageFromGroup(mListMessagesCache[holder.adapterPosition].id, group.id)
+                        showToast("Повідомлення видалене")
+                        Log.i("loging", "delete")
+                        mListMessagesCache.removeAt(holder.adapterPosition)
+                        notifyItemRemoved(holder.adapterPosition)
 
-                }.setNegativeButton("Змінити повідомлення")
-                { _,_ ->
-                    if (mListMessagesCache[holder.adapterPosition].fileUrl == "empty"){
-                        showEditTextDialog(mListMessagesCache[holder.adapterPosition].text,mListMessagesCache[holder.adapterPosition].id, holder.adapterPosition)
-                        notifyItemChanged(holder.adapterPosition)
-                    }else{
-                        showToast("Це повідомлення неможливо змінити")
+                    }.setNegativeButton("Змінити повідомлення")
+                    { _,_ ->
+                        if (mListMessagesCache[holder.adapterPosition].fileUrl == "empty"){
+                            showEditTextDialog(mListMessagesCache[holder.adapterPosition].text,mListMessagesCache[holder.adapterPosition].id, holder.adapterPosition)
+                            notifyItemChanged(holder.adapterPosition)
+                        }else{
+                            showToast("Це повідомлення неможливо змінити")
+                        }
+
+
                     }
+                    .setCancelable(true)
+                    .show()
 
-
-                }
-                .setCancelable(true)
-                .show()
-
-        }}
+            }}
         return holder
     }
 
-    /*override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        return AppHolderFactory.getHolder(parent, viewType)
-    }*/
+    override fun getItemViewType(position: Int): Int {
+        return mListMessagesCache[position].getTypeView()
+    }
 
     override fun getItemCount(): Int = mListMessagesCache.size
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        (holder as MessageHolder).drawMessage((mListMessagesCache[position]))
+        (holder as MessageHolder).drawMessage(mListMessagesCache[position])
     }
 
     override fun onViewAttachedToWindow(holder: RecyclerView.ViewHolder) {
         (holder as MessageHolder).onAttach(mListMessagesCache[holder.adapterPosition])
+        mListHolders.add((holder as MessageHolder))
         super.onViewAttachedToWindow(holder)
     }
 
@@ -105,10 +103,6 @@ class SingleChatAdapter(var contact: CommonModel) : RecyclerView.Adapter<Recycle
         mListHolders.remove((holder as MessageHolder))
         super.onViewDetachedFromWindow(holder)
     }
-
-
-
-
 
     fun addItemToBottom(
         item: MessageView,

@@ -2,11 +2,18 @@ package donets.danylo.android.utasapp.database
 
 import android.annotation.SuppressLint
 import android.net.Uri
+import android.util.Log
+import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp
+import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow
+import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
+import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ServerValue
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import donets.danylo.android.utasapp.R
@@ -14,9 +21,21 @@ import donets.danylo.android.utasapp.models.CommonModel
 import donets.danylo.android.utasapp.models.UserModel
 import donets.danylo.android.utasapp.utilits.APP_ACTIVITY
 import donets.danylo.android.utasapp.utilits.AppValueEventListener
-import donets.danylo.android.utasapp.utilits.TYPE_MESSAGE_IMAGE
+import donets.danylo.android.utasapp.utilits.TYPE_GROUP
 import donets.danylo.android.utasapp.utilits.showToast
 import java.io.File
+import java.io.InputStreamReader
+import java.time.temporal.ValueRange
+import com.google.firebase.database.DatabaseError as DatabaseError
+
+
+
+
+
+
+
+
+
 
 
 fun initFirebase() {
@@ -272,6 +291,7 @@ fun createGroupToDatabase(
     val mapData = hashMapOf<String, Any>()
     mapData[CHILD_ID] = keyGroup
     mapData[CHILD_FULLNAME] = nameGroup
+    mapData[CHILD_PHOTO_URL] = "empty"
     val mapMembers = hashMapOf<String, Any>()
     listContacts.forEach {
         mapMembers[it.id] = USER_MEMBER
@@ -282,19 +302,93 @@ fun createGroupToDatabase(
 
     path.updateChildren(mapData)
         .addOnSuccessListener {
-            function()
+
             if (uri != Uri.EMPTY) {
                 putFileToStorage(uri, pathStorage) {
                     getUrlFromStorage(pathStorage) {
                         path.child(CHILD_FILE_URL).setValue(it)
+                        addGroupsToMainList(mapData, listContacts) {
+                            function()
+                        }
                     }
                 }
+            } else {
+                addGroupsToMainList(mapData, listContacts) {
+                    function()
+                }
             }
+            }
+                .addOnFailureListener { showToast(it.message.toString()) }
 
-        }
-        .addOnFailureListener { showToast(it.message.toString()) }
 
 
 }
+
+fun addGroupsToMainList(
+    mapData: HashMap<String, Any>,
+    listContacts: List<CommonModel>,
+    function: () -> Unit
+) {
+    val path = REF_DATABASE_ROOT.child(NODE_MAIN_LIST)
+    val map = hashMapOf<String, Any>()
+
+    map[CHILD_ID] = mapData[CHILD_ID].toString()
+    map[CHILD_TYPE] = TYPE_GROUP
+    listContacts.forEach {
+        path.child(it.id).child(map[CHILD_ID].toString()).updateChildren(map)
+    }
+    path.child(CURRENT_UID).child(map[CHILD_ID].toString()).updateChildren(map)
+        .addOnSuccessListener { function() }
+        .addOnFailureListener { showToast(it.message.toString()) }
+
+}
+
+
+fun sendMessageToGroup(message: String, groupID: String, typeText: String, function: () -> Unit) {
+
+    var refMessages = "$NODE_GROUPS/$groupID/$NODE_MESSAGES"
+    val messageKey = REF_DATABASE_ROOT.child(refMessages).push().key
+
+    val mapMessage = hashMapOf<String, Any>()
+    mapMessage[CHILD_FROM] =
+        CURRENT_UID
+    mapMessage[CHILD_TYPE] = typeText
+    mapMessage[CHILD_TEXT] = message
+    mapMessage[CHILD_ID] = messageKey.toString()
+    mapMessage[CHILD_TIMESTAMP] =
+        ServerValue.TIMESTAMP
+
+    REF_DATABASE_ROOT.child(refMessages).child(messageKey.toString())
+        .updateChildren(mapMessage)
+        .addOnSuccessListener { function() }
+        .addOnFailureListener { showToast(it.message.toString()) }
+
+}
+
+fun deleteMessage(messageId: String, userId: String){
+
+    REF_DATABASE_ROOT.child(NODE_MESSAGES).child(CURRENT_UID).child(userId).child(messageId).removeValue()
+   REF_DATABASE_ROOT.child(NODE_MESSAGES).child(userId).child(CURRENT_UID).child(messageId).removeValue()
+}
+
+fun editMessage(newMessageText: String, messageId: String, userId: String){
+    REF_DATABASE_ROOT.child(NODE_MESSAGES).child(userId).child(CURRENT_UID).child(messageId).child(
+        CHILD_TEXT).setValue(newMessageText)
+    REF_DATABASE_ROOT.child(NODE_MESSAGES).child(CURRENT_UID).child(userId).child(messageId).child(
+        CHILD_TEXT).setValue(newMessageText)
+
+}
+
+fun deleteMessageFromGroup(messageId:String, groupID: String){
+    REF_DATABASE_ROOT.child(NODE_GROUPS).child(groupID).child(NODE_MESSAGES).child(messageId).removeValue()
+}
+
+fun editMessageFromGroup(newMessageText:String, messageId:String, groupID: String){
+    REF_DATABASE_ROOT.child(NODE_GROUPS).child(groupID).child(NODE_MESSAGES).child(messageId).child(
+        CHILD_TEXT).setValue(newMessageText)
+}
+
+
+
 
 

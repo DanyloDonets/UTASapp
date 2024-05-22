@@ -46,4 +46,6 @@ class HolderImageMessage(view: View): RecyclerView.ViewHolder(view), MessageHold
     override fun onDettach() {
 
     }
+
+
 }

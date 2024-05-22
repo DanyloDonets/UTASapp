@@ -2,13 +2,16 @@ package donets.danylo.android.utasapp.ui.objects
 
 import android.R.attr.label
 import android.R.attr.text
+import android.app.AlertDialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Context.CLIPBOARD_SERVICE
 import android.graphics.drawable.Drawable
 import android.net.Uri
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.EditText
 import android.widget.ImageView
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.drawerlayout.widget.DrawerLayout
@@ -24,8 +27,10 @@ import com.mikepenz.materialdrawer.util.AbstractDrawerImageLoader
 import com.mikepenz.materialdrawer.util.DrawerImageLoader
 import donets.danylo.android.utasapp.R
 import donets.danylo.android.utasapp.database.USER
+import donets.danylo.android.utasapp.database.editMessage
 import donets.danylo.android.utasapp.ui.screens.contacts.ContactsFragment
 import donets.danylo.android.utasapp.ui.screens.groups.AddContactsFragment
+import donets.danylo.android.utasapp.ui.screens.marschal.MarschalsFragment
 import donets.danylo.android.utasapp.ui.screens.settings.SettingsFragment
 import donets.danylo.android.utasapp.utilits.APP_ACTIVITY
 import donets.danylo.android.utasapp.utilits.downloadAndSetImage
@@ -76,7 +81,7 @@ class appDrawer{
             .addDrawerItems(
                 PrimaryDrawerItem().withIdentifier(101)
                     .withIconTintingEnabled(true)
-                    .withName("Stages")
+                    .withName("Маршали")
                     .withSelectable(false),
                 PrimaryDrawerItem().withIdentifier(102)
                     .withIconTintingEnabled(true)
@@ -120,10 +125,36 @@ class appDrawer{
 
     private fun clickToItem(position:Int){
         when (position) {
+            1 -> checkMarschal()
             2 -> replaceFragment(AddContactsFragment())
             4 -> replaceFragment(SettingsFragment())
             3 -> replaceFragment(ContactsFragment())
             5 -> addToCopyBuffer()
+        }
+    }
+
+    private fun checkMarschal(){
+        val builder = AlertDialog.Builder(APP_ACTIVITY, R.style.AlertDialogTheme)
+        val inflater = LayoutInflater.from(APP_ACTIVITY)
+        val dialogLayout = inflater.inflate(R.layout.edit_text_layout, null)
+        val editText = dialogLayout.findViewById<EditText>(R.id.et_editText)
+
+
+        with(builder){
+            setTitle("Введіть пароль")
+            setPositiveButton("Ok") { dialog, witch ->
+                checkPassword(editText.text.toString())
+            }
+            setView(dialogLayout)
+            show()
+        }
+    }
+
+    fun checkPassword(password: String){
+        if(password == "password"){
+            replaceFragment(MarschalsFragment())
+        }else{
+            showToast("Невірний пароль")
         }
     }
 

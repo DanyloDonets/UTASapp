@@ -1,9 +1,11 @@
 package donets.danylo.android.utasapp.ui.screens.singleChat
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -15,6 +17,7 @@ import android.widget.TextView
 import androidx.appcompat.widget.Toolbar
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -37,6 +40,8 @@ import donets.danylo.android.utasapp.database.REF_DATABASE_ROOT
 import donets.danylo.android.utasapp.database.TYPE_TEXT
 import donets.danylo.android.utasapp.database.clearChat
 import donets.danylo.android.utasapp.database.deleteChat
+import donets.danylo.android.utasapp.database.deleteMessage
+import donets.danylo.android.utasapp.database.editMessage
 import donets.danylo.android.utasapp.utilits.downloadAndSetImage
 import donets.danylo.android.utasapp.database.getCommonModel
 import donets.danylo.android.utasapp.database.getMessageKey
@@ -47,6 +52,7 @@ import donets.danylo.android.utasapp.database.sendMessage
 
 import donets.danylo.android.utasapp.database.uploadFileToStorage
 import donets.danylo.android.utasapp.ui.messageRecyclerView.views.AppViewFactory
+import donets.danylo.android.utasapp.ui.messageRecyclerView.views.MessageView
 import donets.danylo.android.utasapp.ui.screens.mainList.MainListFragment
 import donets.danylo.android.utasapp.utilits.AppChildEventListener
 import donets.danylo.android.utasapp.utilits.AppTextWatcher
@@ -65,11 +71,11 @@ import donets.danylo.android.utasapp.utilits.getFilenameFromUri
 import donets.danylo.android.utasapp.utilits.replaceFragment
 
 @Suppress("DEPRECATION")
-class SingleChatFragment(contact: CommonModel) : BaseFragment(R.layout.fragment_single_chat) {
+class SingleChatFragment(private val contact: CommonModel) : BaseFragment(R.layout.fragment_single_chat){
 
     private var _binding: FragmentSingleChatBinding? = null
     private val binding get() = _binding!!
-    private val contact_ = contact
+
 
     private lateinit var mListenerInfoToolbar: AppValueEventListener
     private lateinit var mReceivingUser: UserModel
@@ -77,7 +83,7 @@ class SingleChatFragment(contact: CommonModel) : BaseFragment(R.layout.fragment_
     private lateinit var mRefUser: DatabaseReference
     private lateinit var toolbarInfoLayout: ConstraintLayout
     private lateinit var mRefMessages: DatabaseReference
-    private lateinit var mAdapter: SingleChatAdapter
+    private var mAdapter: SingleChatAdapter? = null?.let { it(contact) }
     private lateinit var mRecyclerView: RecyclerView
     private lateinit var mMessagesListener: AppChildEventListener
     private var mCountMessages = 3
@@ -88,16 +94,22 @@ class SingleChatFragment(contact: CommonModel) : BaseFragment(R.layout.fragment_
     private lateinit var mAppVoiceRecorder: AppVoiceRecorder
     private lateinit var mBottomSheetBehavior: BottomSheetBehavior<*>
 
+
+
+
+
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        _binding = FragmentSingleChatBinding.bind(view)}
+        mAdapter = SingleChatAdapter(contact)
+
+    }
 
     private fun initRecycleView() {
         mRecyclerView = binding.chatRecycleView
-        mAdapter = SingleChatAdapter()
         mRefMessages = REF_DATABASE_ROOT.child(NODE_MESSAGES)
             .child(CURRENT_UID)
-            .child(contact_.id)
+            .child(contact.id)
         mRecyclerView.adapter = mAdapter
         mRecyclerView.setHasFixedSize(true)
         mRecyclerView.isNestedScrollingEnabled = false
@@ -106,11 +118,11 @@ class SingleChatFragment(contact: CommonModel) : BaseFragment(R.layout.fragment_
             val message = it.getCommonModel()
 
             if (mSmoothScrollToPosition) {
-                mAdapter.addItemToBottom(AppViewFactory.getView(message)) {
-                    mRecyclerView.smoothScrollToPosition(mAdapter.itemCount)
+                mAdapter?.addItemToBottom(AppViewFactory.getView(message)) {
+                    mRecyclerView.smoothScrollToPosition(mAdapter!!.itemCount)
                 }
             } else {
-                mAdapter.addItemToTop(AppViewFactory.getView(message)) {
+                mAdapter?.addItemToTop(AppViewFactory.getView(message)) {
                     mSwipeRefreshLayout.isRefreshing = false
                 }
             }
@@ -133,7 +145,15 @@ class SingleChatFragment(contact: CommonModel) : BaseFragment(R.layout.fragment_
                     mIsScrolling = true
                 }
             }
+
+
+
         })
+
+
+
+
+
         mSwipeRefreshLayout.setOnRefreshListener { updateData() }
     }
 
@@ -155,16 +175,18 @@ class SingleChatFragment(contact: CommonModel) : BaseFragment(R.layout.fragment_
             initInfoToolbar()
         }
 
-        mRefUser = REF_DATABASE_ROOT.child(NODE_USERS).child(contact_.id)
+        mRefUser = REF_DATABASE_ROOT.child(NODE_USERS).child(contact.id)
         mRefUser.addValueEventListener(mListenerInfoToolbar)
         binding.chatBtnSendMessage.setOnClickListener{
+            Log.i("loging","message")
             mSmoothScrollToPosition = true
             val message = binding.chatInputMessage.text.toString()
             if(message.isEmpty()){
                 showToast("Введіть повідомлення")
             }else{
-                sendMessage(message, contact_.id, TYPE_TEXT){
-                    saveToMainList(contact_.id, TYPE_CHAT)
+                Log.i("loging","send message")
+                sendMessage(message, contact.id, TYPE_TEXT){
+                    saveToMainList(contact.id, TYPE_CHAT)
                     binding.chatInputMessage.setText("")
                 }
             }
@@ -173,7 +195,7 @@ class SingleChatFragment(contact: CommonModel) : BaseFragment(R.layout.fragment_
 
     private fun initInfoToolbar() {
         if (mReceivingUser.fullname.isEmpty()) {
-            toolbarInfoLayout.findViewById<TextView>(R.id.toolbar_chat_fullname).text = contact_.fullname
+            toolbarInfoLayout.findViewById<TextView>(R.id.toolbar_chat_fullname).text = contact.fullname
         } else  toolbarInfoLayout.findViewById<TextView>(R.id.toolbar_chat_fullname).text = mReceivingUser.fullname
 
         toolbarInfoLayout.findViewById<CircleImageView>(R.id.toolbar_chat_image).downloadAndSetImage(mReceivingUser.photoUrl)
@@ -182,6 +204,7 @@ class SingleChatFragment(contact: CommonModel) : BaseFragment(R.layout.fragment_
 
     override fun onResume() {
         super.onResume()
+        _binding = view?.let { FragmentSingleChatBinding.bind(it) }
         initFields()
         initToolbar()
         initRecycleView()
@@ -224,14 +247,14 @@ class SingleChatFragment(contact: CommonModel) : BaseFragment(R.layout.fragment_
                                 R.color.colorPrimary
                             )
                         )
-                        val messageKey = getMessageKey(contact_.id)
+                        val messageKey = getMessageKey(contact.id)
                         mAppVoiceRecorder.startRecord(messageKey)
                     } else if (event.action == MotionEvent.ACTION_UP) {
 
                         binding.chatInputMessage.setText("")
                         binding.chatBtnVoice.colorFilter = null
                         mAppVoiceRecorder.stopRecord { file, messageKey ->
-                            uploadFileToStorage(Uri.fromFile(file), messageKey,contact_.id, TYPE_MESSAGE_VOICE)
+                            uploadFileToStorage(Uri.fromFile(file), messageKey,contact.id, TYPE_MESSAGE_VOICE)
                             mSmoothScrollToPosition = true
                         }
                     }
@@ -243,25 +266,27 @@ class SingleChatFragment(contact: CommonModel) : BaseFragment(R.layout.fragment_
     }
 
     @Deprecated("Deprecated in Java")
+
+
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-
         if (data!=null) {
             when(requestCode) {
                  ImagePicker.REQUEST_CODE->{
                     val imageUri = data?.data
-                    val messageKey = getMessageKey(contact_.id)
+                    val messageKey = getMessageKey(contact.id)
 
                 if (imageUri != null) {
-                    uploadFileToStorage(imageUri, messageKey, contact_.id, TYPE_MESSAGE_IMAGE)
+                    uploadFileToStorage(imageUri, messageKey, contact.id, TYPE_MESSAGE_IMAGE)
                 }
                         mSmoothScrollToPosition = true
             }
                 PICK_FILE_REQUEST_CODE -> {
                     val uri = data.data
-                    val messageKey = getMessageKey(contact_.id)
+                    val messageKey = getMessageKey(contact.id)
                     val filename = getFilenameFromUri(uri!!)
-                    uploadFileToStorage(uri,messageKey,contact_.id, TYPE_MESSAGE_FILE,filename)
+                    uploadFileToStorage(uri,messageKey,contact.id, TYPE_MESSAGE_FILE,filename)
                     mSmoothScrollToPosition = true
                 }
             }
@@ -298,23 +323,21 @@ class SingleChatFragment(contact: CommonModel) : BaseFragment(R.layout.fragment_
         super.onDestroyView()
         _binding = null
         mAppVoiceRecorder.releaseRecorder()
-        mAdapter.onDestroy()
+        mAdapter?.onDestroy()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        /* Создания выпадающего меню*/
         activity?.menuInflater?.inflate(R.menu.single_chat_action_menu, menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        /* Слушатель выбора пунктов выпадающего меню */
         when (item.itemId) {
 
-            R.id.menu_clear_chat -> clearChat(contact_.id){
+            R.id.menu_clear_chat -> clearChat(contact.id){
                 showToast("Чат очищено")
                 replaceFragment(MainListFragment())
             }
-            R.id.menu_delete_chat -> deleteChat(contact_.id){
+            R.id.menu_delete_chat -> deleteChat(contact.id){
                 showToast("Чат видалено")
                 replaceFragment(MainListFragment())
             }

@@ -90,4 +90,6 @@ class HolderFileMessage(view: View) : RecyclerView.ViewHolder(view), MessageHold
         chatReceivedBtnDownload.setOnClickListener(null)
     }
 
+
+
 }

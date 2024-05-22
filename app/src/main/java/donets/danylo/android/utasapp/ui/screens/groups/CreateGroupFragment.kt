@@ -22,6 +22,7 @@ import donets.danylo.android.utasapp.utilits.hideKeyboard
 import donets.danylo.android.utasapp.utilits.replaceFragment
 import donets.danylo.android.utasapp.utilits.showToast
 
+@Suppress("DEPRECATION")
 class CreateGroupFragment(private var listContacts:List<CommonModel>): BaseFragment(R.layout.fragment_create_group) {
 
     private lateinit var mRecyclerView: RecyclerView

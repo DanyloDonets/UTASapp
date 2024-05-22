@@ -38,5 +38,6 @@ const val NODE_GROUPS = "groups"
 const val NODE_MEMBERS = "members"
 const val FOLDER_GROUPS_IMAGE = "groups_image"
 const val USER_CREATOR = "creator"
-const val USER_ADMIN ="admin"
 const val USER_MEMBER = "member"
+
+

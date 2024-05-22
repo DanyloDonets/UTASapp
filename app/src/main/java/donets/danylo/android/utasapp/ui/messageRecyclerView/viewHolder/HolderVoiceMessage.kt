@@ -101,4 +101,6 @@ class HolderVoiceMessage(view: View): RecyclerView.ViewHolder(view),MessageHolde
         mAppVoicePlayer.release()
     }
 
+
+
 }
